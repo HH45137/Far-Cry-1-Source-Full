@@ -902,6 +902,8 @@ void CXKeyboard::SetupKeyNames()
 {
 #ifndef PS2
 	////////////////////////////////////////////////////////////
+	int k = 0;			// declared outside: the value is reused by the loop below
+
 	for (int k=0;k<256;k++) 
 	{
     memset(m_AsciiTable[k].lc,0,sizeof(m_AsciiTable[k].lc));

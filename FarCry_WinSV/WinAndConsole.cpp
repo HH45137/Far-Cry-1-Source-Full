@@ -32,7 +32,7 @@ BOOL WINAPI ConsoleWinHandlerRoutine( unsigned long dwCtrlType )
 }
 
 // Console main function, this code is from WinMainCRTStartup()
-int _tmain( unsigned long, TCHAR**, TCHAR** )
+int _tmain( int argc, TCHAR** argv, TCHAR** envp )
 {
 #define SPACECHAR _T(' ')
 #define DQUOTECHAR _T('\"')

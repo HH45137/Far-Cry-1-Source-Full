@@ -29,7 +29,9 @@
 
 //////////////////////////////////////////////////////////////////////////
 
-#define CHECK_LOADED(_func, _retval)	if (!m_pSound->Loaded()) { TRACE("%s(%d) Warning: %s called without a sound (%s) being fully loaded !", __FILE__, __LINE__, #_func, GetName()); return _retval; }
+// variadic: the return value may be omitted for void functions (clang requires
+// the argument list to match the macro definition)
+#define CHECK_LOADED(_func, ...)	if (!m_pSound->Loaded()) { TRACE("%s(%d) Warning: %s called without a sound (%s) being fully loaded !", __FILE__, __LINE__, #_func, GetName()); return __VA_ARGS__; }
 
 int CSound::m_PlayingChannels = 0;
 

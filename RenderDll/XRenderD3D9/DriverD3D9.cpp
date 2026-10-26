@@ -1028,7 +1028,8 @@ void CD3D9Renderer::Update()
     if (fg)
     {
       fg[nC] = (byte)f;
-      Graph(fg, 0, hgt-280, wdt, 256, nC, type, "Frame Time", Col_Green, fScale);
+      CFColor colGreen = Col_Green;	// clang: no temporary to non-const CFColor&
+      Graph(fg, 0, hgt-280, wdt, 256, nC, type, "Frame Time", colGreen, fScale);
     }
     nC++;
     if (nC == wdt)

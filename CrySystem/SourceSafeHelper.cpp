@@ -4,6 +4,16 @@
 
 #if defined(WIN32) && !defined(WIN64)			// windows specific implementation
 
+// clang does not support "#import" of type libraries, therefore the SourceSafe
+// integration is disabled in clang builds (the caller handles the false result).
+#if defined(__clang__)
+#define CRY_SOURCESAFE_SUPPORTED 0
+#else
+#define CRY_SOURCESAFE_SUPPORTED 1
+#endif
+
+#if CRY_SOURCESAFE_SUPPORTED
+
 #include <objbase.h>
 #include <comdef.h>
 #include "TCHAR.h"					// _T()
@@ -14,6 +24,8 @@
 
 #pragma comment (lib, "ole32.lib")
 
+
+#endif // CRY_SOURCESAFE_SUPPORTED
 
 #endif	// WIN32
 
@@ -27,11 +39,11 @@ bool _GetSSFileInfo( const char *inszSourceSafePath, const char *inszSSProject, 
 	outszName[0]=0;outszComment[0]=0;outszDate[0]=0;
 
 
-#if !(defined(WIN32) && !defined(WIN64))			// non windows specific implementation
+#if !CRY_SOURCESAFE_SUPPORTED			// non windows specific implementation
 	return false;		// this plattform is not supporting SourceSafeInfo
 #endif	// WIN32
 
-#if defined(WIN32) && !defined(WIN64)			// windows specific implementation
+#if CRY_SOURCESAFE_SUPPORTED			// windows specific implementation
 
 
 	char sSSFilePath[_MAX_PATH];		// max SS path size (_MAX_PATH might be not right here)

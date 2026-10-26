@@ -264,7 +264,7 @@ bool ResourceCompiler::Compile( Platform platform,IConfig *config,const char *fi
 			int iPercentage=(100*i)/(iSize);
 			char str[0x100];
 
-			_snprintf(str, sizeof(str),"Progress: %3d%% %s",iPercentage,arrFiles[i]);
+			_snprintf(str, sizeof(str),"Progress: %3d%% %s",iPercentage,(const char *)arrFiles[i]);
 
 			SetConsoleTitle(str);
 		}
@@ -291,7 +291,7 @@ bool ResourceCompiler::Compile( Platform platform,IConfig *config,const char *fi
 		Log ( "%d of %d file%s converted%s. Couldn't convert the following files:", numFilesConverted, arrFiles.size(), arrFiles.size() > 1 ? "s":"", szTimeMsg);
 		Log("");
 		for (i = 0; i < arrNonConvertedFiles.size(); ++i)
-			Log ( "   %s", arrNonConvertedFiles[i]);
+			Log ( "   %s", (const char *)arrNonConvertedFiles[i]);
 		Log("");
 	}
 
@@ -720,7 +720,7 @@ void RegisterConvertors( IResourceCompiler *rc )
 void TestMatEntityNameTokenizer ()
 {
 	char szMatName[1024];
-	while (gets (szMatName))
+	while (fgets (szMatName, sizeof(szMatName), stdin))
 	{
 		CMatEntityNameTokenizer mt;
 		mt.tokenize(szMatName);

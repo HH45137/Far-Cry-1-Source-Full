@@ -22,6 +22,7 @@
 #include "ServerSlot.h"
 
 #include "ICryPak.h"
+#include <algorithm>	// std::replace
 
 //#define LOGEVENTS							// don't use in public release
 

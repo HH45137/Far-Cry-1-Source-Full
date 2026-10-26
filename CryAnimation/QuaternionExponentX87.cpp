@@ -2,7 +2,7 @@
 #include "QuaternionExponentX87.h"
 
 #if !defined(LINUX)
-#if defined(_CPU_X86) 
+#if defined(_CPU_X86) && !defined(CRY_NO_INLINE_ASM) 
 static const float fEpsilon = 1e-4f;
 //////////////////////////////////////////////////////////////////////////
 // x87 asm optimized quaternion exponent

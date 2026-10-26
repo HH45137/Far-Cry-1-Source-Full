@@ -123,7 +123,7 @@ bool CfgFile::Save( void )
 		Section &sec =*si;
 
 		if(sec.name!="")
-			fprintf(file,"[%s]\r\n",sec.name);																						// section
+			fprintf(file,"[%s]\r\n",(const char *)sec.name);																						// section
 
 		for (std::list<Entry>::iterator it = sec.entries.begin(); it != sec.entries.end(); ++it)
 		{

@@ -26,6 +26,10 @@ struct ICfgFile;
 
 /** Enumeration of supported platforms.
 */
+// <shlwapi.h> (pulled in by a few translation units) defines the same names
+#ifdef PLATFORM_UNKNOWN
+#undef PLATFORM_UNKNOWN
+#endif
 enum Platform
 {
 	PLATFORM_UNKNOWN,	//!< Unknown platform.

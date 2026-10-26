@@ -49,6 +49,19 @@ inline int float2int(float x) {
 
 #else //WIN64
 
+#if defined(CRY_NO_INLINE_ASM)
+// Portable fallback for compilers without MSVC inline assembly (clang).
+inline int64 GetTicks() {
+	return __rdtsc();
+}
+
+const int	imag	= -((23+127)<<23 | 1<<22);
+inline int float2int(float x) {
+	floatint u;
+	u.fval = x+fmag;
+	return u.ival+imag;
+}
+#else
 __declspec(naked) inline int64 GetTicks() { 
 	__asm rdtsc 
 	__asm ret
@@ -66,6 +79,7 @@ __declspec(naked) inline int float2int(float x)
 	add eax, [esp-4]
 	ret
 }}
+#endif // CRY_NO_INLINE_ASM
 
 #endif //WIN64
 

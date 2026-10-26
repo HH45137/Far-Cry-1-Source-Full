@@ -18,7 +18,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 #ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -28,7 +27,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE 
 BEGIN
-    IDS_NOCD                "Диск с игрой не найден. Вставьте пожалуйста 1-й CD-диск или DVD-диск в привод и запустите игру снова."
+    IDS_NOCD                "Aene n eadie ia iaeaai. ?noaauoa iiaeaeoenoa 1-e CD-aene eee DVD-aene a ideaia e caionoeoa eado niiaa."
 END
 
 #endif    // Russian resources
@@ -41,7 +40,6 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
 #endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED

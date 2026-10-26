@@ -456,6 +456,9 @@ ILINE void cryPrefetchT0SSE(const void *src)
 // Inline assembly syntax for use with Visual C++
 inline void cryMemcpy( void* Dst, const void* Src, int Count )
 {
+#if defined(CRY_NO_INLINE_ASM)
+  memcpy(Dst, Src, Count);
+#else
   if (g_CpuFlags & CPUF_SSE)
   {
 	  __asm
@@ -467,19 +470,19 @@ inline void cryMemcpy( void* Dst, const void* Src, int Count )
 
 		  cld
 		  cmp		ecx, TINY_BLOCK_COPY
-		  jb		$memcpy_ic_3	; tiny? skip mmx copy
+		  jb		memcpy_ic_3	; tiny? skip mmx copy
 
 		  cmp		ecx, 32*1024		; dont align between 32k-64k because
-		  jbe		$memcpy_do_align	;  it appears to be slower
+		  jbe		memcpy_do_align	;  it appears to be slower
 		  cmp		ecx, 64*1024
-		  jbe		$memcpy_align_done
-	  $memcpy_do_align:
+		  jbe		memcpy_align_done
+	  memcpy_do_align:
 		  mov		ecx, 8			; a trick thats faster than rep movsb...
 		  sub		ecx, edi		; align destination to qword
 		  and		ecx, 111b		; get the low bits
 		  sub		ebx, ecx		; update copy count
 		  neg		ecx				; set up to jump into the array
-		  add		ecx, offset $memcpy_align_done
+		  add		ecx, offset memcpy_align_done
 		  jmp		ecx				; jump to array of movsbs
 
 	  align 4
@@ -492,19 +495,19 @@ inline void cryMemcpy( void* Dst, const void* Src, int Count )
 		  movsb
 		  movsb
 
-	  $memcpy_align_done:			; destination is dword aligned
+	  memcpy_align_done:			; destination is dword aligned
 		  mov		ecx, ebx		; number of bytes left to copy
 		  shr		ecx, 6			; get 64-byte block count
-		  jz		$memcpy_ic_2	; finish the last few bytes
+		  jz		memcpy_ic_2	; finish the last few bytes
 
 		  cmp		ecx, IN_CACHE_COPY/64	; too big 4 cache? use uncached copy
-		  jae		$memcpy_uc_test
+		  jae		memcpy_uc_test
 
 	  // This is small block copy that uses the MMX registers to copy 8 bytes
 	  // at a time.  It uses the "unrolled loop" optimization, and also uses
 	  // the software prefetch instruction to get the data into the cache.
 	  align 16
-	  $memcpy_ic_1:			; 64-byte block copies, in-cache copy
+	  memcpy_ic_1:			; 64-byte block copies, in-cache copy
 
 		  prefetchnta [esi + (200*64/34+192)]		; start reading ahead
 
@@ -528,31 +531,31 @@ inline void cryMemcpy( void* Dst, const void* Src, int Count )
 		  add		esi, 64			; update source pointer
 		  add		edi, 64			; update destination pointer
 		  dec		ecx				; count down
-		  jnz		$memcpy_ic_1	; last 64-byte block?
+		  jnz		memcpy_ic_1	; last 64-byte block?
 
-	  $memcpy_ic_2:
+	  memcpy_ic_2:
 		  mov		ecx, ebx		; has valid low 6 bits of the byte count
-	  $memcpy_ic_3:
+	  memcpy_ic_3:
 		  shr		ecx, 2			; dword count
 		  and		ecx, 1111b		; only look at the "remainder" bits
 		  neg		ecx				; set up to jump into the array
-		  add		ecx, offset $memcpy_last_few
+		  add		ecx, offset memcpy_last_few
 		  jmp		ecx				; jump to array of movsds
 
-	  $memcpy_uc_test:
+	  memcpy_uc_test:
 		  cmp		ecx, UNCACHED_COPY/64	; big enough? use block prefetch copy
-		  jae		$memcpy_bp_1
+		  jae		memcpy_bp_1
 
-	  $memcpy_64_test:
+	  memcpy_64_test:
 		  or		ecx, ecx		; tail end of block prefetch will jump here
-		  jz		$memcpy_ic_2	; no more 64-byte blocks left
+		  jz		memcpy_ic_2	; no more 64-byte blocks left
 
 	  // For larger blocks, which will spill beyond the cache, it's faster to
 	  // use the Streaming Store instruction MOVNTQ.   This write instruction
 	  // bypasses the cache and writes straight to main memory.  This code also
 	  // uses the software prefetch instruction to pre-read the data.
 	  align 16
-	  $memcpy_uc_1:				; 64-byte blocks, uncached copy
+	  memcpy_uc_1:				; 64-byte blocks, uncached copy
 
 		  prefetchnta [esi + (200*64/34+192)]		; start reading ahead
 
@@ -575,33 +578,33 @@ inline void cryMemcpy( void* Dst, const void* Src, int Count )
 		  movntq	[edi-16], mm0
 		  dec		ecx
 		  movntq	[edi-8], mm1
-		  jnz		$memcpy_uc_1	; last 64-byte block?
+		  jnz		memcpy_uc_1	; last 64-byte block?
 
-		  jmp		$memcpy_ic_2		; almost done
+		  jmp		memcpy_ic_2		; almost done
 
 	  // For the largest size blocks, a special technique called Block Prefetch
 	  // can be used to accelerate the read operations.   Block Prefetch reads
 	  // one address per cache line, for a series of cache lines, in a short loop.
 	  // This is faster than using software prefetch.  The technique is great for
 	  // getting maximum read bandwidth, especially in DDR memory systems.
-	  $memcpy_bp_1:			; large blocks, block prefetch copy
+	  memcpy_bp_1:			; large blocks, block prefetch copy
 
 		  cmp		ecx, CACHEBLOCK			; big enough to run another prefetch loop?
-		  jl		$memcpy_64_test			; no, back to regular uncached copy
+		  jl		memcpy_64_test			; no, back to regular uncached copy
 
 		  mov		eax, CACHEBLOCK / 2		; block prefetch loop, unrolled 2X
 		  add		esi, CACHEBLOCK * 64	; move to the top of the block
 	  align 16
-	  $memcpy_bp_2:
+	  memcpy_bp_2:
 		  mov		edx, [esi-64]		; grab one address per cache line
 		  mov		edx, [esi-128]		; grab one address per cache line
 		  sub		esi, 128			; go reverse order to suppress HW prefetcher
 		  dec		eax					; count down the cache lines
-		  jnz		$memcpy_bp_2		; keep grabbing more lines into cache
+		  jnz		memcpy_bp_2		; keep grabbing more lines into cache
 
 		  mov		eax, CACHEBLOCK		; now that its in cache, do the copy
 	  align 16
-	  $memcpy_bp_3:
+	  memcpy_bp_3:
 		  movq	mm0, [esi   ]		; read 64 bits
 		  movq	mm1, [esi+ 8]
 		  movq	mm2, [esi+16]
@@ -623,9 +626,9 @@ inline void cryMemcpy( void* Dst, const void* Src, int Count )
 
 		  dec		eax					; count down
 
-		  jnz		$memcpy_bp_3		; keep copying
+		  jnz		memcpy_bp_3		; keep copying
 		  sub		ecx, CACHEBLOCK		; update the 64-byte block count
-		  jmp		$memcpy_bp_1		; keep processing chunks
+		  jmp		memcpy_bp_1		; keep processing chunks
 
 	  // The smallest copy uses the X86 "movsd" instruction, in an optimized
 	  // form which is an "unrolled loop".   Then it handles the last few bytes.
@@ -647,13 +650,13 @@ inline void cryMemcpy( void* Dst, const void* Src, int Count )
 		  movsd
 		  movsd
 
-	  $memcpy_last_few:		; dword aligned from before movsds
+	  memcpy_last_few:		; dword aligned from before movsds
 		  mov		ecx, ebx	; has valid low 2 bits of the byte count
 		  and		ecx, 11b	; the last few cows must come home
-		  jz		$memcpy_final	; no more, lets leave
+		  jz		memcpy_final	; no more, lets leave
 		  rep		movsb		; the last 1, 2, or 3 bytes
 
-	  $memcpy_final:
+	  memcpy_final:
 		  emms				; clean up the MMX state
 		  sfence				; flush the write buffer
 	  //	mov		eax, [dest]	; ret value = destination pointer
@@ -663,6 +666,7 @@ inline void cryMemcpy( void* Dst, const void* Src, int Count )
   {
     memcpy(Dst, Src, Count);
   }
+#endif // CRY_NO_INLINE_ASM
 }
 
 inline void cryPrefetch(const void* Src, int nCount)

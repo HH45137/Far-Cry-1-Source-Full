@@ -1491,7 +1491,7 @@ UsersList::iterator	itr = std::find(m_UsersList.begin(), m_UsersList.end(), entI
 
 void CVehicle::PreloadInstanceResources(Vec3d vPrevPortalPos, float fPrevPortalDistance, float fTime)
 {
-#pragma message( "Warning: Preloading of render resources is not implemented in " __FUNCTION__ )
+#pragma message( "Warning: Preloading of render resources is not implemented in CVehicle::PreloadInstanceResources" )
 	// for all objects what will be used for rendering call 
 	// ICryCharInstance::PreloadResources or
 	// IStatObj::PreloadResources

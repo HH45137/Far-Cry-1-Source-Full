@@ -126,7 +126,8 @@ protected:
 		unsigned char ucOcclCount/*1..4*/;
 		UVSetHeader3():ucOcclCount(0)
 		{
-			UVSetHeader::UVSetHeader();
+			// the base class constructor is called automatically; the explicit
+			// "UVSetHeader::UVSetHeader();" call is not valid C++
 			OcclIds[0] = OcclIds[1] = OcclIds[2] = OcclIds[3] = 0;
 		}
 	};

@@ -38,7 +38,7 @@ void CScriptObjectScript::Debug_Full_recursive( IScriptObject *pCurrent, string 
 
 	while(pCurrent->MoveNext())
 	{
-		char *szKeyName;
+		const char *szKeyName;
 
 		if(!pCurrent->GetCurrentKey(szKeyName))
 			szKeyName="NO";
@@ -66,12 +66,12 @@ void CScriptObjectScript::Debug_Full_recursive( IScriptObject *pCurrent, string 
 
 				pCurrent->GetCurrent(pNewObject);
 
-#if defined(LINUX)
-				string s = sPath+string("/")+szKeyName;
-				Debug_Full_recursive(pNewObject,s,setVisited);
-#else
-				Debug_Full_recursive(pNewObject,sPath+string("/")+szKeyName,setVisited);
-#endif
+				{
+					// clang does not allow binding the temporary to the
+					// non-const string& parameter, keep a named copy.
+					string s = sPath+string("/")+szKeyName;
+					Debug_Full_recursive(pNewObject,s,setVisited);
+				}
 				pNewObject->Release();
 			}
 		}
@@ -110,7 +110,7 @@ DWORD CScriptObjectScript::Debug_Buckets_recursive( IScriptObject *pCurrent, str
 
 	while(pCurrent->MoveNext())
 	{
-		char *szKeyName;
+		const char *szKeyName;
 
 		dwTableElementCount++;
 
@@ -135,12 +135,8 @@ DWORD CScriptObjectScript::Debug_Buckets_recursive( IScriptObject *pCurrent, str
 
 				pCurrent->GetCurrent(pNewObject);
 
-#if defined(LINUX)
 				string s = sPath+string("/")+szKeyName;
 				DWORD dwSubTableCount = Debug_Buckets_recursive(pNewObject,s,setVisited,dwMinBucket);
-#else
-				DWORD dwSubTableCount = Debug_Buckets_recursive(pNewObject,sPath+string("/")+szKeyName,setVisited,dwMinBucket);
-#endif
 				pNewObject->Release();
 
 				if(dwSubTableCount>=dwMinBucket)
@@ -184,7 +180,7 @@ void CScriptObjectScript::Debug_Elements( IScriptObject *pCurrent, string &sPath
 
 	while(pCurrent->MoveNext())
 	{
-		char *szKeyName;
+		const char *szKeyName;
 
 		if(!pCurrent->GetCurrentKey(szKeyName))
 			szKeyName="NO";
@@ -207,16 +203,14 @@ void CScriptObjectScript::Debug_Elements( IScriptObject *pCurrent, string &sPath
 
 				pCurrent->GetCurrent(pNewObject);
 
-#if defined(LINUX)
-				string s = sPath+string("/")+szKeyName;
-				DWORD dwSubTableCount = Debug_Buckets_recursive(pNewObject,s,setVisited,0xffffffff);
-#else
-				DWORD dwSubTableCount = Debug_Buckets_recursive(pNewObject,sPath+string("/")+szKeyName,setVisited,0xffffffff);
-#endif
+				{
+					string s = sPath+string("/")+szKeyName;
+					DWORD dwSubTableCount = Debug_Buckets_recursive(pNewObject,s,setVisited,0xffffffff);
 
-				pNewObject->Release();
+					pNewObject->Release();
 
-				GetISystem()->GetILog()->Log("  %8d '%s' '%s'\n",dwSubTableCount,sPath.c_str(),szKeyName);				
+					GetISystem()->GetILog()->Log("  %8d '%s' '%s'\n",dwSubTableCount,sPath.c_str(),szKeyName);				
+				}
 			}
 		}
 	}

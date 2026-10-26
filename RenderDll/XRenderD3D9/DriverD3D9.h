@@ -1780,7 +1780,7 @@ public:
 
   static void CalcMipsAndSize(STexPic *ti);
 
-  static BindNULL(int From)
+  static void BindNULL(int From)
   {
     int n = CTexMan::m_nCurStages;
     CTexMan::m_nCurStages = From;

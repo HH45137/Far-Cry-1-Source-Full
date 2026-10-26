@@ -1502,7 +1502,7 @@ void CD3D9Renderer::EF_Eval_DeformVerts(TArray<SDeform>* Defs)
         break;
 
       default:
-        iLog->Log("Unknown deform type %d in Shader '%s'\n", df->m_eType, m_RP.m_pShader->m_Name);
+        iLog->Log("Unknown deform type %d in Shader '%s'\n", df->m_eType, m_RP.m_pShader->m_Name.c_str());
         break;
     }
   }

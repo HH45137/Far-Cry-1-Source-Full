@@ -537,7 +537,10 @@ int CPhysicalEntity::AddCollider(CPhysicalEntity *pCollider)
 	if (i==m_nColliders) {
 		if (m_nColliders==m_nCollidersAlloc) {
 			CPhysicalEntity **pColliders = m_pColliders;
-			memcpy(m_pColliders = new (CPhysicalEntity*[m_nCollidersAlloc+=8]), pColliders, sizeof(CPhysicalEntity*)*m_nColliders);
+			m_nCollidersAlloc += 8;
+			// placement-new with an array type is invalid C++, allocate and copy
+			m_pColliders = new CPhysicalEntity*[m_nCollidersAlloc];
+			memcpy(m_pColliders, pColliders, sizeof(CPhysicalEntity*)*m_nColliders);
 			if (pColliders) delete[] pColliders;
 		}
 		for(i=0;i<m_nColliders && pCollider->GetMassInv()>m_pColliders[i]->GetMassInv();i++);

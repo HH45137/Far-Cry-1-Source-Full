@@ -1,0 +1,5 @@
+// Compatibility shim for Microsoft Visual C++ >= 14.40 (VS 2022 17.10 / VS 2026)
+// which dropped the deprecated <hash_set> header.
+#pragma once
+#include <set>
+#include "cry_stl_compat.h"

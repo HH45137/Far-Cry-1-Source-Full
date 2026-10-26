@@ -18,7 +18,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
 #ifdef _WIN32
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-#pragma code_page(1252)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -68,7 +67,6 @@ XT_IDI_XTREME           ICON    DISCARDABLE     "res\\xtreme.ico"
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -598,7 +596,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     XT_IDS_SE_ERR_BAD_FORMAT 
-                            "The .exe file is invalid (non-Win32® .exe or error in .exe image)."
+                            "The .exe file is invalid (non-Win32? .exe or error in .exe image)."
     XT_IDS_SE_ERR_SHARE     "A sharing violation occurred."
     XT_IDS_SE_ERR_ASSOCINCOMPLETE 
                             "The file name association is incomplete or invalid."

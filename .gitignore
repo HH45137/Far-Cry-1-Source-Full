@@ -1,0 +1,15 @@
+# ------------------------------------------------------------------------------
+# CMake build tree
+# ------------------------------------------------------------------------------
+/build-clang/
+/build-vs/
+/build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.ninja
+.ninja_deps
+.ninja_log
+/Debug/
+/Release/
+_xprobe/

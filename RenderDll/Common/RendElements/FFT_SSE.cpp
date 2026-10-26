@@ -364,19 +364,19 @@ _lEnd3:
     fxch        st(4)
     fstp        dword ptr [ebp+4]
     fsubrp      st(3),st
-    fst         [esp+10h]
+    fst         dword ptr [esp+10h]
     fadd        st,st(1)
     fxch        st(4)
-    fst         [esp+14h]
+    fst         dword ptr [esp+14h]
     fadd        st,st(2)
     fxch        st(3)
-    fst         [esp+18h]
+    fst         dword ptr [esp+18h]
     fsub        st,st(5)
-    fld         [esp+10h]
+    fld         dword ptr [esp+10h]
     fsubp       st(2),st
-    fld         [esp+14h]
+    fld         dword ptr [esp+14h]
     fsubrp      st(3),st
-    fld         [esp+18h]
+    fld         dword ptr [esp+18h]
     faddp       st(6),st
     add         ebp,10h
     add         edx,10h

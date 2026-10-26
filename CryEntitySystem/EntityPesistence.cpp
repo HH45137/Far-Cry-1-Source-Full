@@ -171,7 +171,8 @@ bool CEntity::Write(CStream& stm,EntityCloneState *cs)
 			if (bSyncPosition)
 			{
 				Vec3d vPos = GetPos( false );
-				_VERIFY(stm.WritePkd(CStreamData_WorldPos(vPos)));
+				CStreamData_WorldPos streamWorldPos( vPos );	// clang: no temporary to non-const ref
+				_VERIFY(stm.WritePkd(streamWorldPos));
 			}
 		}
 
@@ -414,11 +415,8 @@ bool CEntity::Read(CStream& stm,bool bNoUpdate)
 			{
 				Vec3d vPos;
 //			_VERIFY(stm.Read(vPos));
-#if defined(LINUX)
-				_VERIFY(stm.ReadPkd(*(IStreamData*)(&CStreamData_WorldPos(vPos))));
-#else
-				_VERIFY(stm.ReadPkd(CStreamData_WorldPos(vPos)));
-#endif
+				CStreamData_WorldPos streamWorldPos( vPos );	// clang: no temporary to non-const ref
+				_VERIFY(stm.ReadPkd(streamWorldPos));
 				if (!bNoUpdate)
 					SetPos(vPos, false);
 			}

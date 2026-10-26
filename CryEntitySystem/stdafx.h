@@ -193,7 +193,7 @@ _inline void __cdecl __CRYTEKDLL_TRACE(const char *sFormat, ... )
 #define TRACE __CRYTEKDLL_TRACE
 
 #else
-#define TRACE(str) ;
+#define TRACE(...) ;
 #endif
 
 #if defined(_DEBUG) && !defined(LINUX)

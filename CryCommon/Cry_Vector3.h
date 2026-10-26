@@ -329,10 +329,10 @@ typedef Vec3_f64 vectorr;
 typedef Vec3_tpl<int>		vectori;
 
 
-inline Vec3_tpl<f32>::Vec3_tpl(type_min) { x=y=z=-3.3E38f; }
-inline Vec3_tpl<f32>::Vec3_tpl(type_max) { x=y=z=3.3E38f; }
-inline Vec3_tpl<f64>::Vec3_tpl(type_min) { x=y=z=-1.7E308; }
-inline Vec3_tpl<f64>::Vec3_tpl(type_max) { x=y=z=1.7E308; }
+template<> inline Vec3_tpl<f32>::Vec3_tpl(type_min) { x=y=z=-3.3E38f; }
+template<> inline Vec3_tpl<f32>::Vec3_tpl(type_max) { x=y=z=3.3E38f; }
+template<> inline Vec3_tpl<f64>::Vec3_tpl(type_min) { x=y=z=-1.7E308; }
+template<> inline Vec3_tpl<f64>::Vec3_tpl(type_max) { x=y=z=1.7E308; }
 
 template<class F> 
 ILINE F GetLengthSquared( const Vec3_tpl<F> &v ) { return v.x*v.x + v.y*v.y + v.z*v.z; }
@@ -672,9 +672,7 @@ struct Plane
 		d=-(point | normal); 
 	}
 
-	ILINE friend Plane GetPlane(  const Vec3 &normal, const Vec3 &point ) {  
-		return Plane( normal,-(point|normal)  );
-	}
+	ILINE friend Plane GetPlane(  const Vec3 &normal, const Vec3 &point );
 
 	/*!
 	*
@@ -698,12 +696,7 @@ struct Plane
 		n = GetNormalized((v1-v0)%(v0-v2));	//vector cross-product
 		d	=	-(n | v0);				//calculate d-value
 	}
-	ILINE friend Plane GetPlane( const Vec3 &v0, const Vec3 &v1, const Vec3 &v2 ) {  
-		Plane p;
-		p.n = GetNormalized((v1-v0)%(v0-v2)); //vector cross-product
-		p.d	=	-(p.n | v0);			 //calculate d-value
-		return p;
-	}
+	ILINE friend Plane GetPlane( const Vec3 &v0, const Vec3 &v1, const Vec3 &v2 );
 
 	/*!
 	*
@@ -772,6 +765,23 @@ struct Plane
 
 };
 
+
+// GetPlane() used to be defined as a friend inside struct Plane.  MSVC's
+// non-conforming name lookup managed to find it from unrelated code, clang
+// (two phase lookup) does not, therefore the helpers are plain inline
+// functions with a namespace scope declaration now.
+ILINE Plane GetPlane( const Vec3 &normal, const Vec3 &point )
+{
+	return Plane( normal, -(point | normal) );
+}
+
+ILINE Plane GetPlane( const Vec3 &v0, const Vec3 &v1, const Vec3 &v2 )
+{
+	Plane p;
+	p.n = GetNormalized((v1-v0)%(v0-v2)); //vector cross-product
+	p.d	=	-(p.n | v0);			 //calculate d-value
+	return p;
+}
 
 
 //! calculate 2 vector that form a orthogonal base with a given input vector (by M.M.)

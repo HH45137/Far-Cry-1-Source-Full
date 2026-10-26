@@ -1,0 +1,8 @@
+// Compatibility shim for Microsoft Visual C++ >= 14.40 (VS 2022 17.10 / VS 2026)
+// which dropped the deprecated <hash_map> header.
+//
+// The engine never uses stdext::hash_map directly: the module StdAfx headers do
+// "#define hash_map map" before including this file, so plain <map> is enough.
+#pragma once
+#include <map>
+#include "cry_stl_compat.h"

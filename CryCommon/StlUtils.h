@@ -231,7 +231,7 @@ namespace stl
 	//! Case sensetive less key for any type convertable to const char*.
 	//////////////////////////////////////////////////////////////////////////
 	template <class Type>
-	struct less_strcmp : public std::binary_function<Type,Type,bool> 
+	struct less_strcmp 
 	{
 		bool operator()( const Type &left,const Type &right ) const
 		{
@@ -242,7 +242,7 @@ namespace stl
 	//////////////////////////////////////////////////////////////////////////
 	//! Case insensetive less key for any type convertable to const char*.
 	template <class Type>
-	struct less_stricmp : public std::binary_function<Type,Type,bool> 
+	struct less_stricmp 
 	{
 		bool operator()( const Type &left,const Type &right ) const
 		{
@@ -305,13 +305,10 @@ namespace stl
 	};
 #if !defined(LINUX)
 	// Support for both Microsoft and SGI kind of hash_map.
-	template <class Key,class Value,class HashFunc>
-	class hash_map : 
-#ifdef _STLP_HASH_MAP // STL Port
-		std::hash_map<Key,Value,HashFunc,HashFunc>
-#else
-		std::hash_map<Key,Value,HashFunc>
-#endif // STL Port
+	// Modern MSVC STL versions no longer ship std::hash_map; the engine only
+	// requires the ordered map interface here, so std::map is used as base.
+	template <class Key,class Value,class HashFunc = void>
+	class hash_map : public std::map<Key,Value>
 	{};
 #endif //LINUX
 }

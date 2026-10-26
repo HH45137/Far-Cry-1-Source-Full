@@ -19,7 +19,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
 #ifdef _WIN32
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-#pragma code_page(1251)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -41,7 +40,6 @@ IDI_SMALLICON           ICON                    "res\\editor_icon16.ico"
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2343,9 +2341,9 @@ BEGIN
     CONTROL         "",IDC_ANGLE_SLIDER,"msctls_trackbar32",TBS_AUTOTICKS | 
                     TBS_TOP | WS_TABSTOP,217,41,66,19
     LTEXT           "Static",IDC_ANGLE,287,32,8,8
-    LTEXT           "º",IDC_STATIC,297,32,8,8
-    LTEXT           "0º",IDC_STATIC,208,48,10,8
-    LTEXT           "90º",IDC_STATIC,284,48,14,8
+    LTEXT           "?",IDC_STATIC,297,32,8,8
+    LTEXT           "0?",IDC_STATIC,208,48,10,8
+    LTEXT           "90?",IDC_STATIC,284,48,14,8
     LTEXT           "m/texel",IDC_STATIC,67,14,27,8
     CONTROL         "&Subsampling",IDC_SUB_SAMPLING,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,82,39,55,8
@@ -4475,7 +4473,6 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE 9, 1
-#pragma code_page(1252)
 #endif //_WIN32
 #include "res\CryEdit.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components

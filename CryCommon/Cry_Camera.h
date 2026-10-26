@@ -983,7 +983,9 @@ inline Matrix44	ViewMatrix(const Ang3 &angle)	{
 	Matrix33 ViewMatZ=Matrix33::CreateRotationZ(-angle.x);
 	Matrix33 ViewMatX=Matrix33::CreateRotationX(-angle.y);
 	Matrix33 ViewMatY=Matrix33::CreateRotationY(+angle.z);
-	return GetTransposed44( ViewMatX*ViewMatY*ViewMatZ);
+	// clang needs the explicit Matrix44 conversion here: the old code relied on
+	// MSVC finding GetTransposed44() through an implicit conversion + friend lookup.
+	return GetTransposed44( Matrix44(ViewMatX*ViewMatY*ViewMatZ) );
 }
 
 //ZXY

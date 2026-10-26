@@ -1286,7 +1286,12 @@ void CEntity::UpdateLipSync( SEntityUpdateContext &ctx )
 void CEntity::OnCollide(float fDeltaTime)
 {
 	//m_pISystem->GetILog()->LogToConsole("diff=%0.2f",m_pISystem->GetITimer()->GetCurrTime()-m_fLastCollideTime);
-	int bAwake = m_physic ? m_physic->GetStatus(&pe_status_awake()) : 0;
+	int bAwake = 0;
+	if (m_physic)
+	{
+		pe_status_awake sa;			// clang: no address of a temporary
+		bAwake = m_physic->GetStatus(&sa);
+	}
 	float fFreq = m_physic && (m_physic->GetType()==PE_RIGID || m_physic->GetType()==PE_WHEELEDVEHICLE) && (bAwake+m_bWasAwake) ? 0.01f : 0.3f;
 	float fFrameTime = m_pISystem->GetITimer()->GetCurrTime()-m_fLastCollideTime;
 	if (!m_physic || fFrameTime<=fFreq && bAwake==m_bWasAwake)
@@ -1467,7 +1472,8 @@ void CEntity::OnCollide(float fDeltaTime)
 		IGeometry *pWaterSurface = pWorld->GetGeomManager()->CreatePrimitive(primitives::box::type, &boxWater);
 		m_pSplashList->Clear();
 
-		for(sp.ipart=m_physic->GetStatus(&pe_status_nparts())-1; sp.ipart>=0; sp.ipart--)
+		pe_status_nparts snParts;	// clang: no address of a temporary
+		for(sp.ipart=m_physic->GetStatus(&snParts)-1; sp.ipart>=0; sp.ipart--)
 		{
 			m_physic->GetStatus(&sp);
 			gwd.offset = sp.pos;
@@ -1674,7 +1680,7 @@ void CEntity::UpdatePhysics( SEntityUpdateContext &ctx )
 					pLB->InvalidateVideoBuffer();
 				}
 			}
-			if ((m_bVisible^m_bWasVisible) && (!m_bVisible || psb.wind*psb.airResistance>0))
+			if ((m_bVisible^m_bWasVisible) && (!m_bVisible || (psb.wind*psb.airResistance).len2()>0))
 				m_physic->Action(&aa);
 		}
 
@@ -2194,7 +2200,8 @@ void CEntity::AddImpulse(int ipart, Vec3d pos, Vec3d impulse,bool bPos,float fAu
 		))
 	{
 		Vec3d mod_impulse = impulse;
-		if (!(physic->GetStatus(&pe_status_nparts())>5 && physic->GetType()==PE_ARTICULATED))
+		pe_status_nparts snParts;	// clang: no address of a temporary
+		if (!(physic->GetStatus(&snParts)>5 && physic->GetType()==PE_ARTICULATED))
 		{	// don't scale impulse for complex articulated entities
 			pe_status_dynamics sd;
 			float minVel = m_pEntitySystem->m_pMinImpulseVel->GetFVal();

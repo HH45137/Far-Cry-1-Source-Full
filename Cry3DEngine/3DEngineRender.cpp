@@ -1585,7 +1585,10 @@ void C3DEngine::DrawShadowSpotOnTerrain(Vec3d vPos, float fRadius)
 		}
 
 		if(verts.Count())
-			GetRenderer()->DrawTriStrip(&(CVertexBuffer (&verts[0].xyz.x,VERTEX_FORMAT_P3F_COL4UB_TEX2F)),verts.Count());
+		{
+			CVertexBuffer vb(&verts[0].xyz.x,VERTEX_FORMAT_P3F_COL4UB_TEX2F);	// clang: no address of a temporary
+			GetRenderer()->DrawTriStrip(&vb,verts.Count());
+		}
 	}
 }
 

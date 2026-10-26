@@ -20,6 +20,11 @@
 
 #define BORDER_SIZE 50
 
+// The rich edit stream callback has to be declared before the class: a friend
+// declaration inside the class is not visible to member function bodies with
+// clang's two phase name lookup.
+DWORD CALLBACK EditStreamCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
+
 class CSourceEdit : public _TinyWindow
 {
 	public:
@@ -60,6 +65,9 @@ public:
 		return TRUE;
 	}
 
+	// clang needs the friend declaration before the first use below
+	friend DWORD CALLBACK EditStreamCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb);
+
 	BOOL SetText(char *pszText)
 	{
 		EDITSTREAM strm;
@@ -72,6 +80,7 @@ public:
 		return m_wEditWindow.SendMessage(EM_STREAMIN, SF_RTF, (LPARAM) &strm);
 	};
 
+	// definition of the stream callback (declared above)
 	friend DWORD CALLBACK EditStreamCallback(DWORD_PTR dwCookie, LPBYTE pbBuff, LONG cb, LONG *pcb)
 	{
 		char ***pppText = reinterpret_cast<char ***> (dwCookie);

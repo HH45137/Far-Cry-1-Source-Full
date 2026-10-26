@@ -18,7 +18,6 @@
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-#pragma code_page(1252)
 #endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
@@ -126,7 +125,7 @@ CAPTION "About"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,53,74,50,14
-    LTEXT           "Lua Debugger Version 1.0\n(C) 2002 Crytek\n\nWritten by\nAlberto Demichelis\nTim Schröder",
+    LTEXT           "Lua Debugger Version 1.0\n(C) 2002 Crytek\n\nWritten by\nAlberto Demichelis\nTim Schroder",
                     IDC_STATIC,7,7,96,53
 END
 

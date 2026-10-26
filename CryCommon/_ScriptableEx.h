@@ -388,12 +388,15 @@ protected:
 		template<> IScriptSystem *_ScriptableEx<_class>::m_pSS=NULL; \
 		template<> _ScriptableEx<_class>::PropertiesVec *_ScriptableEx<_class>::m_pvPropertiesVector=NULL;
 #else
-	#define _DECLARE_SCRIPTABLEEX(_class) IFunctionHandler * _ScriptableEx<_class>::m_pFunctionHandler=NULL; \
-		_ScriptableEx<_class>::FunctionsVec _ScriptableEx<_class>::m_vFuncs; \
-		IScriptObject *_ScriptableEx<_class>::m_pTemplateTable=NULL; \
-		IScriptObject *_ScriptableEx<_class>::m_pPropertiesTable=NULL; \
-		IScriptSystem *_ScriptableEx<_class>::m_pSS=NULL; \
-		_ScriptableEx<_class>::PropertiesVec *_ScriptableEx<_class>::m_pvPropertiesVector=NULL;
+	// clang (and any conforming compiler) requires the "template<>" prefix for
+	// the out-of-class definition of the static members of an explicit
+	// specialization, the old MSVC 7.x did not.
+	#define _DECLARE_SCRIPTABLEEX(_class) template<> IFunctionHandler * _ScriptableEx<_class>::m_pFunctionHandler=NULL; \
+		template<> _ScriptableEx<_class>::FunctionsVec _ScriptableEx<_class>::m_vFuncs = _ScriptableEx<_class>::FunctionsVec(); \
+		template<> IScriptObject *_ScriptableEx<_class>::m_pTemplateTable=NULL; \
+		template<> IScriptObject *_ScriptableEx<_class>::m_pPropertiesTable=NULL; \
+		template<> IScriptSystem *_ScriptableEx<_class>::m_pSS=NULL; \
+		template<> _ScriptableEx<_class>::PropertiesVec *_ScriptableEx<_class>::m_pvPropertiesVector=NULL;
 #endif	//LINUX
 
 #define CHECK_PARAMETERS_SS(_pSS,_n) \

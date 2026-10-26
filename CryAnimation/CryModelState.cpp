@@ -1939,7 +1939,7 @@ ICryCharSubmesh* CryModelState::GetSubmesh(unsigned i)
 	}
 	return( pRes );
 #else
-	return i < m_arrSubmeshes.size() ? m_arrSubmeshes[i]:NULL;
+	return i < m_arrSubmeshes.size() ? m_arrSubmeshes[i] : _smart_ptr<CryModelSubmesh>(NULL);
 #endif
 }
 
@@ -1953,7 +1953,7 @@ CryModelSubmesh* CryModelState::GetCryModelSubmesh(unsigned i)
 	}
 	return( pRes );
 #else
-	return i < m_arrSubmeshes.size() ? m_arrSubmeshes[i]:NULL;
+	return i < m_arrSubmeshes.size() ? m_arrSubmeshes[i] : _smart_ptr<CryModelSubmesh>(NULL);
 #endif
 }
 

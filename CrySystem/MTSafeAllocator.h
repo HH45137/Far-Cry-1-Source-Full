@@ -111,12 +111,14 @@ public:
 
 		void construct(pointer _Ptr, const _Ty& _Val)
 		{	// construct object at _Ptr with value _Val
-			std::_Construct(_Ptr, _Val);
+			// std::_Construct() and std::_Destroy() no longer exist in modern
+			// MSVC STL versions, use placement new / explicit destructor calls.
+			::new ((void*)_Ptr) _Ty(_Val);
 		}
 
 		void destroy(pointer _Ptr)
 		{	// destroy object at _Ptr
-			std::_Destroy(_Ptr);
+			_Ptr->~_Ty();
 		}
 
 		size_t max_size() const

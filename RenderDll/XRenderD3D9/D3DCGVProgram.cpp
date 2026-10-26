@@ -212,7 +212,7 @@ bool CCGVProgram_D3D::mfGetFXParamNameByID(int nParam, char *ParamName)
     if (!strcmp(m_EntryFunc.c_str(), funcName))
     {
       const char *pFunc = m_Functions[i].m_Struct.c_str();
-      char *s = strchr(pFunc, '(');
+      char *s = (char *)strchr(pFunc, '(');
       s = strchr(s, ',');
       s++;
       int n = 0;
@@ -415,7 +415,7 @@ int CCGVProgram_D3D::mfVertexFormat(bool &bUseTangents, bool &bUseLM)
       if (!strcmp(m_EntryFunc.c_str(), funcName))
       {
         const char *pFunc = m_Functions[i].m_Struct.c_str();
-        const char *s = strchr(pFunc, '(');
+        const char *s = (char *)strchr(pFunc, '(');
         if (s)
         {
           s++;

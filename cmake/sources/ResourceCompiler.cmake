@@ -1,0 +1,19 @@
+# Generated from ResourceCompiler/ResourceCompiler.vcproj (Release|Win32)
+set(ResourceCompiler_SOURCES
+    "CfgFile.cpp"
+    "CgfUtils.cpp"
+    "ChunkFileReader.cpp"
+    "CmdLine.cpp"
+    "Config.cpp"
+    "CryBoneDesc.cpp"
+    "CryBoneHierarchyLoader.cpp"
+    "CryChunkedFile.cpp"
+    "CryVertexBinding.cpp"
+    "ExtensionManager.cpp"
+    "FileMapping.cpp"
+    "FileUtil.cpp"
+    "NvTriStrip/NvTriStrip.cpp"
+    "NvTriStrip/NvTriStripObjects.cpp"
+    "ResourceCompiler.cpp"
+    "stdafx.cpp"
+)

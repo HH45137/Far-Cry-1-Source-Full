@@ -252,14 +252,14 @@ typedef matrix_tpl<float> matrixf;
 	#define DECLARE_MTXNxM_POOL(ftype,sz) template<> ftype matrix_tpl<ftype>::mtx_pool[sz] = {}; template<> int matrix_tpl<ftype>::mtx_pool_pos=0; \
 		template<> int matrix_tpl<ftype>::mtx_pool_size=sz;
 #else
-	#define DECLARE_MTXNxM_POOL(ftype,sz) template<> ftype matrix_tpl<ftype>::mtx_pool[sz]; template<> int matrix_tpl<ftype>::mtx_pool_pos=0; \
+	#define DECLARE_MTXNxM_POOL(ftype,sz) template<> ftype matrix_tpl<ftype>::mtx_pool[sz] = {}; template<> int matrix_tpl<ftype>::mtx_pool_pos=0; \
 		template<> int matrix_tpl<ftype>::mtx_pool_size=sz;
 #endif //LINUX
 
 extern int g_bHasSSE;
 #ifdef PIII_SSE
 void PIII_Mult00_6x6_6x6(float *src1, float *src2, float *dst);
-inline void matrix_product_tpl<float>::assign_to(float *pdst) const {
+template<> inline void matrix_product_tpl<float>::assign_to(float *pdst) const {
 	if ((g_bHasSSE^1|nRows1-6|nCols1-6|nCols2-6)==0) 
 		PIII_Mult00_6x6_6x6(data1,data2, pdst);
 	else {

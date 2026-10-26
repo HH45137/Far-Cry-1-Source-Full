@@ -1260,12 +1260,14 @@ void CObjManager::RenderEntityShadowOnTerrain(IEntityRender * pEntityRnd, bool b
 				pRendState->pShadowMapInfo->pShadowMapLeafBuffersList = new list2<struct CLeafBuffer *>;
 			pRendState->pShadowMapInfo->pShadowMapLeafBuffersList->PreAllocate(16,16);
 
+			// clang: no address of a temporary
+			Vec3d vEntPos(pEntityRnd->GetPos());
 			bREAdded = m_pTerrain->RenderAreaLeafBuffers(vPos, fQuadRadius, 0, 
 				pRendState->pShadowMapInfo->pShadowMapLeafBuffersList->GetElements(), 
 				pRendState->pShadowMapInfo->pShadowMapLeafBuffersList->Count(),
 				pObj, m_pTerrain->m_pTerrainShadowPassEf, bRecalcLeafBuffers, "EntityShadowOnTerrain",0,0,
 				pRendState->pShadowMapInfo->pShadowMapFrustumContainer->GetShadowMapFrustum(),
-				&Vec3d(pEntityRnd->GetPos()),
+				&vEntPos,	// clang: no address of a temporary
 				(pEntityRnd->GetEntityRenderType() == eERType_Vegetation) ? pEntityRnd->GetScale() : 1.f);
 		}
 

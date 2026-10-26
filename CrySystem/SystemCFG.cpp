@@ -167,12 +167,10 @@ void CSystemConfiguration::ParseSystemConfig()
 			string::size_type posEq( strLine.find( "=", 0 ) );
 			if (string::npos!=posEq)
 			{
-#if defined(LINUX)	
+				// clang cannot bind a temporary to the non-const string& of
+				// RemoveWhiteSpaces(), use a named copy like the Linux build.
 				string s( strLine, 0, posEq );
 				string strKey( RemoveWhiteSpaces(s) );
-#else
-				string strKey( RemoveWhiteSpaces( string( strLine, 0, posEq ) ) );
-#endif
 				if (!strKey.empty())
 				{
 						// extract value

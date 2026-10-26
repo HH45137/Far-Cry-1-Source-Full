@@ -18,6 +18,7 @@ right now this code is not GPL or LGPL in any way
 ///////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////
 LRESULT CALLBACK _TinyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+// _TinyDlgProc is used by several translation units, keep internal linkage only.
 static BOOL CALLBACK _TinyDlgProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +191,7 @@ public:
 
 	virtual BOOL IsCreated() { return IsWindow(m_hWnd); };
 
-	virtual MakeChild()
+	virtual void MakeChild()
 	{
 		_TinyAssert(IsCreated());
 		DWORD dwStyle = GetWindowLong(m_hWnd, GWL_STYLE);
@@ -730,7 +731,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-static LRESULT CALLBACK _TinyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+inline LRESULT CALLBACK _TinyWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	_TinyWindow *pWnd;
 	pWnd=(_TinyWindow *)::GetWindowLongPtr(hWnd,GWLP_USERDATA);
