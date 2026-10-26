@@ -14,3 +14,4 @@ cmake_install.cmake
 /Release/
 _xprobe/
 /.idea
+/build
