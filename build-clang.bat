@@ -6,7 +6,7 @@ REM  Usage:  build-clang.bat [Release^|Debug]
 REM =============================================================================
 setlocal
 set CONFIG=%1
-if "%CONFIG%"=="" set CONFIG=Release
+if "%CONFIG%"=="" set CONFIG=Debug
 
 set BUILD_DIR=build-clang
 
@@ -26,6 +26,7 @@ cmake -S . -B %BUILD_DIR% -G Ninja ^
       -DCMAKE_BUILD_TYPE=%CONFIG% ^
       -DCMAKE_C_COMPILER=clang-cl ^
       -DCMAKE_CXX_COMPILER=clang-cl ^
+      -DFARCRY_BUILD_RENDERER_OGL=ON ^
       -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
 if errorlevel 1 exit /b 1
 
