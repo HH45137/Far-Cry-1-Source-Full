@@ -466,7 +466,7 @@ void CGLRenderer::EF_PipelineInit()
     m_RP.m_VisObjects[0] = &m_RP.m_ObjectsPool[0];
   }
 
-  for (i=0; i<eSHP_MAX; i++)
+  for (int i=0; i<eSHP_MAX; i++)
   {
     if (i == eSHP_DiffuseLight || i == eSHP_SpecularLight)
       m_SHPTable[i] = eSHP_Light;
@@ -777,6 +777,7 @@ void CGLRenderer::EF_PreRender(int Stage)
       }
     }
   //  if (i == m_RP.m_DLights.Num() && m_RP.m_SunDir == Vec3d(0,0,0))
+    int i = 0;
     if (i == m_RP.m_DLights[SRendItem::m_RecurseLevel].Num() && IsEquivalent(m_RP.m_SunDir,Vec3d(0,0,0)))
       m_RP.m_SunDir = Vec3d(0,0,1);
   }
@@ -862,7 +863,7 @@ void CGLRenderer::EF_Eval_DeformVerts(TArray<SDeform>* Defs)
         break;
 
       default:
-        iLog->Log("Unknown deform type %d in Shader '%s'\n", df->m_eType, m_RP.m_pShader->m_Name);
+        iLog->Log("Unknown deform type %d in Shader '%s'\n", df->m_eType, m_RP.m_pShader->m_Name.c_str());
         break;
     }
   }
@@ -6529,7 +6530,7 @@ void CGLRenderer::EF_RenderPipeLine(void (*RenderFunc)())
     m_RP.m_PersFlags &= ~RBPF_IGNORERENDERING;
 }
 
-static char *sDescList[] = {"General", "DistSort", "Preprocess", "Unsorted", "Last"};
+static const char *sDescList[] = {"General", "DistSort", "Preprocess", "Unsorted", "Last"};
 
 // Process render items list [nList] from [nums] to [nume]
 // 1. Sorting of the list

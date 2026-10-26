@@ -552,6 +552,7 @@ public:
           n++;
           sLine[i][m++] = 0;
         }
+        int i = 0;
         int nS = i;
         bool bUseTS = false;
         for (i=0; i<nS; i++)

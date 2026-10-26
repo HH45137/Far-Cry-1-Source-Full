@@ -437,7 +437,7 @@ public:
 
   FILE *m_LogFile;
   FILE *m_LogFileStr;
-  _inline void Logv(int RecLevel, char *format, ...)
+  _inline void Logv(int RecLevel, const char *format, ...)
   {
     va_list argptr;
     

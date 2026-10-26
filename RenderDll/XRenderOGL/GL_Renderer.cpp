@@ -708,7 +708,8 @@ void CGLRenderer::Update()
     if (fg)
     {
       fg[nC] = (byte)f;
-      Graph(fg, 0, hgt-280, wdt, 256, nC, type, "Frame Time", Col_Green, fScale);
+      auto tempGreen = Col_Green;
+      Graph(fg, 0, hgt-280, wdt, 256, nC, type, (char*)"Frame Time", tempGreen, fScale);
     }
     nC++;
     if (nC == wdt)

@@ -1409,7 +1409,7 @@ public:
   static int GetTexDstFormat(ETEX_Format eTF);
   static void CalcMipsAndSize(STexPic *ti);
   static ETEX_Format GetTexFormat(int GLFormat);
-  static BindNULL(int From)
+  static void BindNULL(int From)
   {
     int n = CTexMan::m_nCurStages;
     CTexMan::m_nCurStages = From;

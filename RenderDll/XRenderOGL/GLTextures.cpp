@@ -268,7 +268,7 @@ void STexPic::SaveJPG(const char *nam, bool bMips)
     GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT,
     GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT,
   };
-  static char* scubefaces[6] = {"posx","negx","posy","negy","posz","negz"};
+  static const char* scubefaces[6] = {"posx","negx","posy","negy","posz","negz"};
 
   if (m_eTT == eTT_Cubemap)
   {
@@ -911,7 +911,8 @@ int SShaderTexUnit::mfSetTexture(int nt)
           case TO_ENVIRONMENT_CUBE_MAP:
             {
               SEnvTexture *cm = NULL;
-              cm = gRenDev->m_cEF.mfFindSuitableEnvCMap(rd->m_RP.m_pCurObject->GetTranslation(), true, 0, 0);
+              auto tempPos = rd->m_RP.m_pCurObject->GetTranslation();
+              cm = gRenDev->m_cEF.mfFindSuitableEnvCMap(tempPos, true, 0, 0);
               if (cm)
                 cm->m_Tex->Set();
               else
@@ -922,7 +923,8 @@ int SShaderTexUnit::mfSetTexture(int nt)
         case TO_ENVIRONMENT_LIGHTCUBE_MAP:
           {
             SEnvTexture *cm = NULL;
-            cm = gRenDev->m_cEF.mfFindSuitableEnvLCMap(rd->m_RP.m_pCurObject->GetTranslation(), true, 0, 0);
+            auto tempPos = rd->m_RP.m_pCurObject->GetTranslation();
+            cm = gRenDev->m_cEF.mfFindSuitableEnvLCMap(tempPos, true, 0, 0);
             if (cm)
               cm->m_Tex->Set();
             else
@@ -1086,7 +1088,7 @@ bool CGLTexMan::SetFilter(char *tex)
   int i;
   struct textype
   {
-    char *name;
+    const char *name;
     uint typemin;
     uint typemag;
   };
@@ -2885,6 +2887,7 @@ void CGLTexMan::CreateBufRegion(int Width, int Height)
       if (br->m_Width == Width && br->m_Height == Height)
         break;
     }
+    int i = 0;
     if (i == m_BufRegions.Num())
     {
       SBufRegion b;
@@ -2950,6 +2953,7 @@ void CGLTexMan::ClearBuffer(int Width, int Height, bool bEnd,STexPic *pImage, in
       if (br->m_Width == Width && br->m_Height == Height)
         break;
     }
+    int i = 0;
     if (i == m_BufRegions.Num())
       return;
   } 
@@ -3048,7 +3052,7 @@ bool CGLTexMan::ScanEnvironmentCM (const char *name, int size, Vec3d& Pos)
     (*pFR)++;
 
     DrawCubeSide( &sAngles[n][0], Pos, size, n, RendFlags);
-    static char* cubefaces[6] = {"posx","negx","posy","negy","posz","negz"};
+    static const char* cubefaces[6] = {"posx","negx","posy","negy","posz","negz"};
     char str[256];
     int width = size;
     int height = size;
@@ -3149,7 +3153,7 @@ void CGLTexMan::ScanEnvironmentCube(SEnvTexture *cm, int RendFlags, int Size, bo
     DrawCubeSide( &sAngles[n][0], Pos, tex_size, n, RendFlags);
     if (CRenderer::CV_r_envcmwrite)
     {
-      static char* cubefaces[6] = {"posx","negx","posy","negy","posz","negz"};
+      static const char* cubefaces[6] = {"posx","negx","posy","negy","posz","negz"};
       char str[256];
       int width = tex_size;
       int height = tex_size;
@@ -5245,11 +5249,11 @@ void CGLTexMan::Update()
     int Size = 0;
     int PartSize = 0;
 
-    static char *sTexType[] = 
+    static const char *sTexType[] =
     {
       "Base","Cubemap","AutoCubemap","Bump","DSDTBump","Rectangle"
     };
-    static char *sTexFormat[] = 
+    static const char *sTexFormat[] =
     {
       "Unknown","Index8","HSV","0888","8888","RGBA","8000","0565","0555","4444","1555","DXT1","DXT3","DXT5","SIGNED_HILO16","SIGNED_HILO8","SIGNED_RGB8","RGB8","DSDT_MAG","DSDT","0088"
     };
