@@ -307,209 +307,46 @@ extern "C" void Amd64Skinner(CrySkinAuxInt* pAux, CrySkinVertexAligned* pVertex,
 
 
 void CrySkinFull::skinSSE (const Matrix44* pBones, Vec3dA16* pDest)
-{	
-
+{
 #ifdef DEFINE_PROFILER_FUNCTION
 	DEFINE_PROFILER_FUNCTION();
 #endif
 
-	//PROFILE_FRAME_SELF(PureSkin);
-	const Matrix44* pBone = pBones + m_numSkipBones, *pBoneEnd = pBones + m_numBones;
-	CrySkinAuxInt* pAux = &m_arrAux[0];
-	Vertex* pVertex = &m_arrVertices[0];
-
-	// set the bbox to the negative volume to make sure the bbox will calculate starting from the first vertex
-	g_BBox.vMin.v = Vec3d(1e6,1e6,1e6);// = pBone->GetTranslation();
-	g_BBox.vMax.v = Vec3d(-1e6,-1e6,-1e6);// = pBone->GetTranslation();
+	Vec3 vBBoxMin (1e6f, 1e6f, 1e6f);   // negative volume: the first vertex re-initializes it
+	Vec3 vBBoxMax (-1e6f, -1e6f, -1e6f);
 
 #if FOR_TEST
 	for (int i = 0; i < g_GetCVars()->ca_TestSkinningRepeats(); ++i)
 #endif
+	{
+		const Matrix44* pBone = pBones + m_numSkipBones, *pBoneEnd = pBones + m_numBones;
+		const CrySkinAuxInt* pAux = &m_arrAux[0];
+		const Vertex* pVertex = &m_arrVertices[0];
 
-#if defined(_CPU_AMD64)
-	Amd64Skinner(pAux, pVertex, pDest, pBone, &g_BBox.vMin, pBoneEnd);
-#else
-		_asm
-		{	
-			mov EDX, pAux
-			mov EBX, pVertex
-			mov EDI, pDest
-			mov ESI, pBone
+		for (; pBone != pBoneEnd; ++pBone)
+		{
+			// rigid vertices: the destination is over-written, the bbox is built from them
+			for (unsigned nCount = *pAux++; nCount; --nCount, ++pVertex)
+			{
+				const Vec3 vResult = pBone->TransformPointOLD(pVertex->pt);
+				pDest[pVertex->nDest & 0xFFFFFF].v = vResult;
+				AddToBounds(vResult, vBBoxMin, vBBoxMax);
+			}
 
-			// load the current matrix; we don't need the move component
-	startLoop:
-			cmp ESI, pBoneEnd
-			jz endLoop
-			movaps xmm0, [ESI]
-			movaps xmm1, [ESI+0x10]
-			movaps xmm2, [ESI+0x20]
-			movaps xmm3, [ESI+0x30]
-			add ESI, 0x40
+			// smooth1 vertices: met for the first time
+			for (unsigned nCount = *pAux++; nCount; --nCount, ++pVertex, ++pAux)
+				pDest[*pAux].v = pBone->TransformPointOLD(pVertex->pt) * pVertex->fWeight;
 
-			// load the counter for the number of non-flipped tangets for this bone
-	#if CRY_SKIN_AUX_INT_SIZE==2
-			xor ECX,ECX
-			mov CX, word ptr [EDX]
-			add EDX, 2
-	#else
-			mov ECX, dword ptr [EDX]
-			add EDX, 4
-	#endif
-			test ECX, ECX
-			jz endLoopRigid
-
-	startLoopRigid:
-			// load the offset
-			movaps xmm7, [EBX]
-			// calculate the destination pointer
-			mov EAX, [EBX+0xC]
-			and EAX, 0xFFFFFF
-			add EAX, EAX
-			// EDI+EAX*8 points to the destination vector now
-			add EBX, 0x10
-
-			// transform the vertex
-			movss xmm6, xmm7
-			shufps xmm6, xmm6, 0 // xmm6 = 4 copies of offset.x
-			mulps xmm6, xmm0
-			movaps xmm5, xmm7
-			shufps xmm5, xmm5, 0x55 // xmm5 = 4 copies of offset.y
-			mulps xmm5, xmm1
-			shufps xmm7, xmm7, 0xAA // xmm7 = 4 copies of offset.z
-			mulps xmm7, xmm2
-			addps xmm7, xmm5
-			addps xmm7, xmm6
-			addps xmm7, xmm3        // xmm7 = fully transformed vertex, store it
-			// xmm7 = transformed vertex
-			movaps [EDI+EAX*8], xmm7
-
-			//----------------------
-			// Calculation of BBox
-			// xmm5 will be the min, xmm6 will be the max of bbox
-			movaps xmm5, xmm7
-			movaps xmm6, xmm7
-			minps xmm5, g_BBox.vMin
-			maxps xmm6, g_BBox.vMax
-			movaps g_BBox.vMin, xmm5
-			movaps g_BBox.vMax, xmm6
-
-			loop startLoopRigid
-	endLoopRigid:
-
-
-//////////////////////////////////////////////////////////
-// Smooth-1 loop
-// load the counter for the number of smooth vertices met for the first time
-//////////////////////////////////////////////////////////
-	#if CRY_SKIN_AUX_INT_SIZE==2
-			xor ECX,ECX
-			mov CX, word ptr [EDX]
-			add EDX, 2
-	#else
-			mov ECX, dword ptr [EDX]
-			add EDX, 4
-	#endif
-			test ECX, ECX
-			jz endLoopSmooth1
-
-	startLoopSmooth1:
-			// load the offset & blending
-			movaps xmm7, [EBX]
-			// calculate the destination pointer
-	#if CRY_SKIN_AUX_INT_SIZE==2
-			xor EAX,EAX
-			mov AX, word ptr [EDX]
-			add EDX, 2
-	#else
-			mov EAX, dword ptr [EDX]
-			add EDX, 4
-	#endif
-			add EAX, EAX
-			// EDI+EAX*8 points to the destination vector now
-			add EBX, 0x10
-
-			// transform the vertex
-			movss xmm6, xmm7
-			shufps xmm6, xmm6, 0 // xmm6 = 4 copies of offset.x
-			mulps xmm6, xmm0
-			movaps xmm5, xmm7
-			shufps xmm5, xmm5, 0x55 // xmm5 = 4 copies of offset.y
-			mulps xmm5, xmm1
-			movaps xmm4, xmm7
-			shufps xmm4, xmm4, 0xAA // xmm4 = 4 copies of offset.z
-			mulps xmm4, xmm2
-			addps xmm4, xmm5
-			addps xmm4, xmm6
-			addps xmm4, xmm3        // xmm4 = fully transformed vertex, blend it
-			shufps xmm7, xmm7, 0xFF // xmm7 = 4 copies of blending
-			mulps xmm7, xmm4
-			// xmm7 = transformed and blended vertex
-			movaps [EDI+EAX*8], xmm7
-
-			loop startLoopSmooth1
-			//loop startLoopNonflipped
-	endLoopSmooth1:
-
-
-
-//////////////////////////////////////////////////////////
-// Smooth-2 loop
-// load the counter for the number of smooth vertices met for the second time
-//////////////////////////////////////////////////////////
-	#if CRY_SKIN_AUX_INT_SIZE==2
-			xor ECX,ECX
-			mov CX, word ptr [EDX]
-			add EDX, 2
-	#else
-			mov ECX, dword ptr [EDX]
-			add EDX, 4
-	#endif
-			test ECX, ECX
-			jz endLoopSmooth2
-
-	startLoopSmooth2:
-			// load the offset & blending
-			movaps xmm7, [EBX]
-			// calculate the destination pointer
-	#if CRY_SKIN_AUX_INT_SIZE==2
-			xor EAX,EAX
-			mov AX, word ptr [EDX]
-			add EDX, 2
-	#else
-			mov EAX, dword ptr [EDX]
-			add EDX, 4
-	#endif
-			shl EAX, 4
-			add EAX, EDI
-			// EAX points to the destination vector now
-			add EBX, 0x10
-
-			// transform the vertex
-			movss xmm6, xmm7
-			shufps xmm6, xmm6, 0 // xmm6 = 4 copies of offset.x
-			mulps xmm6, xmm0
-			movaps xmm5, xmm7
-			shufps xmm5, xmm5, 0x55 // xmm5 = 4 copies of offset.y
-			mulps xmm5, xmm1
-			movaps xmm4, xmm7
-			shufps xmm4, xmm4, 0xAA // xmm4 = 4 copies of offset.z
-			mulps xmm4, xmm2
-			addps xmm4, xmm5
-			addps xmm4, xmm6
-			addps xmm4, xmm3        // xmm4 = fully transformed vertex, blend it
-			shufps xmm7, xmm7, 0xFF // xmm7 = 4 copies of blending
-			mulps xmm7, xmm4
-			// xmm7 = transformed and blended vertex
-			addps xmm7, [EAX]
-			movaps [EAX], xmm7
-
-			loop startLoopSmooth2
-			//loop startLoopNonflipped
-	endLoopSmooth2:
-
-			jmp startLoop
-	endLoop:
+			// smooth2 vertices: met for the second and the following times
+			for (unsigned nCount = *pAux++; nCount; --nCount, ++pVertex, ++pAux)
+				pDest[*pAux].v += pBone->TransformPointOLD(pVertex->pt) * pVertex->fWeight;
 		}
-#endif		// _CPU_AMD64
+	}
+
+	g_BBox.vMin.v = vBBoxMin;
+	g_BBox.vMax.v = vBBoxMax;
+	g_BBox.vMin.m_Pad = 0;
+	g_BBox.vMax.m_Pad = 0;
 }
+
 #endif
