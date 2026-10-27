@@ -132,7 +132,12 @@ void CryModelSubmesh::DeleteLeafBuffers()
 				SAFE_RELEASE(tmp->pRE);
 				SShaderItem Sh = tmp->GetShaderItem();
 				SAFE_RELEASE(Sh.m_pShader);
-				SAFE_RELEASE(Sh.m_pShaderResources);
+				{
+					if (Sh.m_pShaderResources) {
+						(Sh.m_pShaderResources)->Release();
+						(Sh.m_pShaderResources) = NULL;
+					}
+				};
 			}
 
 			// during GenerateRenderArrays, we allocate this

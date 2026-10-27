@@ -50,6 +50,23 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     target_compile_definitions(farcry_common INTERFACE CRY_NO_INLINE_ASM=1)
 endif()
 
+if(FARCRY_NO_OPTIMIZATION)
+    # /Od is the master switch, /Ob0 disables inlining, /Oy- keeps frame
+    # pointers (cleaner stacks in the debugger), /GF- disables string pooling.
+    set(_farcry_optimisation_options
+        "$<$<COMPILE_LANGUAGE:C,CXX>:/Od>"
+        "$<$<COMPILE_LANGUAGE:C,CXX>:/Ob0>"
+        "$<$<COMPILE_LANGUAGE:C,CXX>:/Oy->"
+        "$<$<COMPILE_LANGUAGE:C,CXX>:/GF->")
+else()
+    set(_farcry_optimisation_options
+        "$<$<COMPILE_LANGUAGE:C,CXX>:/Oy>"
+        "$<$<COMPILE_LANGUAGE:C,CXX>:/GF>"
+        "$<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:Release>:/O2>>"
+        "$<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:RelWithDebInfo>:/O2>>"
+        "$<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:MinSizeRel>:/O1>>")
+endif()
+
 target_compile_options(farcry_common INTERFACE
     "$<$<COMPILE_LANGUAGE:C,CXX>:/W0>"
     "$<$<COMPILE_LANGUAGE:C,CXX>:/bigobj>"
@@ -60,11 +77,7 @@ target_compile_options(farcry_common INTERFACE
     "$<$<COMPILE_LANGUAGE:C,CXX>:/EHsc>"
     "$<$<COMPILE_LANGUAGE:C,CXX>:/std:c++14>"
     "$<$<COMPILE_LANGUAGE:C,CXX>:/FI${FARCRY_ROOT}/cmake/compat/cry_stl_compat.h>"
-    "$<$<COMPILE_LANGUAGE:C,CXX>:/Oy>"
-    "$<$<COMPILE_LANGUAGE:C,CXX>:/GF>"
-    "$<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:Release>:/O2>>"
-    "$<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:RelWithDebInfo>:/O2>>"
-    "$<$<COMPILE_LANGUAGE:C,CXX>:$<$<CONFIG:MinSizeRel>:/O1>>"
+    ${_farcry_optimisation_options}
     "$<$<COMPILE_LANGUAGE:C>:-Wno-implicit-function-declaration>"
     "$<$<COMPILE_LANGUAGE:C>:-Wno-implicit-int>"
     "$<$<COMPILE_LANGUAGE:C>:-Wno-int-conversion>"

@@ -83,6 +83,39 @@ message(STATUS "Compiler  : ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSIO
 message(STATUS "Generator : ${CMAKE_GENERATOR}")
 
 # ------------------------------------------------------------------------------
+# Linker sanity check
+#
+# lld-link 19.x (the LLVM that ships with Visual Studio 2022) mis-computes the
+# .data output section size when it links the VC6 era static libraries that the
+# renderers pull in (nvDXTlib.lib, ijl15.lib) and aborts with
+#
+#   lld-link: error: section larger than 4 GiB: .data
+#
+# while emitting a flood of "ignoring section .debug$S with unrecognized magic"
+# warnings.  Newer LLVM releases (verified with 23.1.2) link exactly the same
+# object files and libraries fine, so point the user at a working toolchain
+# instead of letting the link fail with a misleading message.
+# ------------------------------------------------------------------------------
+if(MSVC AND CMAKE_LINKER MATCHES "lld-link")
+    execute_process(COMMAND "${CMAKE_LINKER}" --version
+        OUTPUT_VARIABLE _farcry_lld_version
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(_farcry_lld_version MATCHES "LLD ([0-9]+)\\.")
+        set(_farcry_lld_major "${CMAKE_MATCH_1}")
+        if(_farcry_lld_major LESS 20)
+            message(WARNING
+                "lld-link '${_farcry_lld_version}' cannot link nvDXTlib.lib/ijl15.lib\n"
+                "  (\"error: section larger than 4 GiB: .data\").  Use a standalone LLVM\n"
+                "  toolchain >= 20 (build-clang.bat uses the clang-cl from PATH), or set\n"
+                "  CMAKE_LINKER to a newer lld-link.exe.")
+        endif()
+        unset(_farcry_lld_major)
+    endif()
+    unset(_farcry_lld_version)
+endif()
+
+# ------------------------------------------------------------------------------
 # Build options
 # ------------------------------------------------------------------------------
 option(FARCRY_BUILD_GAME             "Build the client game module (CryGame) and FarCry.exe" ON)
@@ -105,6 +138,12 @@ option(FARCRY_USE_ASE_SDK        "Enable the ASE query SDK (library is not inclu
 option(FARCRY_USE_BINK_SDK       "Enable Bink video playback"                         ON)
 option(FARCRY_USE_DIVX_SDK       "Enable the DivX video SDK"                         OFF)
 
+# Optimisations are OFF by default: this source drop is primarily used for
+# debugging the engine, and fully unoptimised code (/Od) keeps the debugger
+# honest.  Pass -DFARCRY_NO_OPTIMIZATION=OFF to get the optimised /O2 build
+# used for shipping.
+option(FARCRY_NO_OPTIMIZATION "Disable all compiler optimisations (/Od) in every configuration" ON)
+
 # ------------------------------------------------------------------------------
 # Output layout: everything ends up next to FarCry.exe, like the retail game
 # ------------------------------------------------------------------------------
@@ -112,6 +151,25 @@ set(FARCRY_RUNTIME_OUTPUT_DIR "${CMAKE_BINARY_DIR}/Bin32" CACHE PATH
     "Directory that receives all .exe/.dll files")
 set(FARCRY_ARCHIVE_OUTPUT_DIR "${CMAKE_BINARY_DIR}/Lib32" CACHE PATH
     "Directory that receives import libraries")
+
+if(FARCRY_NO_OPTIMIZATION)
+    # CMAKE_<LANG>_FLAGS_<CONFIG> is placed *before* the target compile options
+    # on the command line and clang-cl lets the last /O switch win, so the /O2
+    # that FarCryEngine.cmake adds would override a "/Od" added here.  Replace
+    # the per config defaults outright (plain set(), not the cache, so toggling
+    # the option back to OFF restores the compiler defaults) and let
+    # FarCryEngine.cmake append /Od /Ob0 /Oy- /GF- behind them.
+    foreach(_farcry_lang C CXX)
+        set(CMAKE_${_farcry_lang}_FLAGS_DEBUG          "/Zi /Ob0 /Od /RTC1 /Oy-")
+        set(CMAKE_${_farcry_lang}_FLAGS_RELEASE        "/Od /Ob0 /Oy- /GF- /DNDEBUG")
+        set(CMAKE_${_farcry_lang}_FLAGS_RELWITHDEBINFO "/Zi /Od /Ob0 /Oy- /GF- /DNDEBUG")
+        set(CMAKE_${_farcry_lang}_FLAGS_MINSIZEREL     "/Od /Ob0 /Oy- /GF- /DNDEBUG")
+    endforeach()
+    unset(_farcry_lang)
+    message(STATUS "Optimisation: disabled (/Od /Ob0 /Oy- /GF-) in every configuration")
+else()
+    message(STATUS "Optimisation: enabled (per configuration defaults)")
+endif()
 
 include(FarCryEngine)
 

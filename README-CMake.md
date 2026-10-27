@@ -25,15 +25,24 @@
 
 ```bat
 :: Ninja + clang-cl（单配置，速度最快；只依赖 PATH 里的 LLVM，无需 VS 的 Clang 组件）
+:: 默认关闭所有编译优化（FARCRY_NO_OPTIMIZATION=ON，产物只适合调试）
 build-clang.bat Release
+
+:: 要出带 /O2 优化的正式产物，第二个参数传 optimize
+build-clang.bat Release optimize
 
 :: 或者：Visual Studio 2022 生成器 + ClangCL 工具集（多配置，可在 IDE 里调试）
 :: 注意：需要先在 VS Installer 里安装 “适用于 Windows 的 C++ Clang 编译器” 组件
 build-clang-vs.bat Release
+build-clang-vs.bat Release optimize
 ```
 
 产物统一输出到 `build-clang\Bin32`（或 `build-vs\Bin32`），与零售版游戏目录结构一致，
 可以直接拷贝到游戏 `Bin32` 目录里覆盖原 DLL。
+
+> 默认构建**关闭了全部编译优化**（`FARCRY_NO_OPTIMIZATION=ON` → `/Od /Ob0 /Oy- /GF-`），
+> 体积和速度都明显不如零售版，只适合调试。要出正式产物请加 `optimize` 参数，
+> 或者在手动 cmake 时传 `-DFARCRY_NO_OPTIMIZATION=OFF`。
 
 ### 2.2 手动执行
 
@@ -41,10 +50,13 @@ build-clang-vs.bat Release
 cmake -S . -B build-clang -G Ninja ^
       -DCMAKE_BUILD_TYPE=Release ^
       -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl ^
-      -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
+      -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32 ^
+      -DFARCRY_NO_OPTIMIZATION=OFF
 
 cmake --build build-clang --parallel
 ```
+
+> 最后一行省略（或写 `=ON`）时所有配置都关掉编译优化，见 3 节的选项表。
 
 > `-m32` 不能省略：clang-cl 默认按 x64 目标编译，而 MSVC 的 `cl.exe` 由
 > `vcvars32.bat` 决定。CMake 里会检查 `CMAKE_SIZEOF_VOID_P`，不是 32 位就直接报错终止。
@@ -79,6 +91,7 @@ Lib32\                  # 各 DLL 的导入库
 | `FARCRY_USE_UBICOM_SDK` | OFF | Ubi.com/GameSpy SDK 的预编译库是用 STLport + 旧 CRT 编的，无法与现在的 MSVC STL 链接 |
 | `FARCRY_USE_PUNKBUSTER_SDK` | ON | PunkBuster 源码在树内，可直接编译 |
 | `FARCRY_USE_BINK_SDK` / `FARCRY_USE_DIVX_SDK` / `FARCRY_USE_ASE_SDK` | Bink ON，其余 OFF | 通过 `NOT_USE_*_SDK` 宏控制 |
+| `FARCRY_NO_OPTIMIZATION` | **ON** | 所有配置关闭编译优化（`/Od /Ob0 /Oy- /GF-`）。默认开启，产物只适合调试；出包请传 `-DFARCRY_NO_OPTIMIZATION=OFF`，或用 `build-clang.bat Release optimize` |
 
 示例：只编引擎核心 + NULL 渲染器（服务器）：
 
@@ -204,4 +217,55 @@ A: 只有 Visual Studio 生成器 + `-T ClangCL` 才需要 VS 内的 Clang 组�
 **Q: 能用 MSVC 的 `cl.exe` 编吗？**
 A: CMake 工程本身不限制编译器，但 `CRY_NO_INLINE_ASM` 兼容分支只在 clang 下启用；
    用 `cl.exe` 时会走原来的内联汇编路径。
+
+**Q: 如何关闭（或重新打开）编译优化？**
+A: 优化开关只来自两处：
+
+1. CMake 各配置的内置 flags（`CMAKE_C_FLAGS_RELEASE = /O2 /Ob2 /DNDEBUG`、
+   `RELWITHDEBINFO = /Zi /O2 /Ob1`、`MINSIZEREL = /O1 /Ob1`）；
+2. `cmake/FarCryEngine.cmake` 往 `farcry_common` 接口库追加的 `/Oy`、`/GF`，
+   以及 `Release/RelWithDebInfo` 的 `/O2`、`MinSizeRel` 的 `/O1`。
+
+`FARCRY_NO_OPTIMIZATION`（默认 **ON**）会把上面两处统统替换成
+`/Od /Ob0 /Oy- /GF-`，对**所有** target（引擎 DLL、渲染器、FarCry.exe、
+FarCry_WinSV.exe、rc.exe）和**所有**配置生效。
+
+```bat
+:: 关优化（默认行为）——单步调试用
+cmake -S . -B build-clang -G Ninja -DCMAKE_BUILD_TYPE=Release ^
+      -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl ^
+      -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
+
+:: 恢复优化（/O2）——出包用
+cmake -S . -B build-clang -DFARCRY_NO_OPTIMIZATION=OFF
+```
+
+注意 **不能** 只传 `-DCMAKE_CXX_FLAGS_RELEASE=/Od`：`CMAKE_<LANG>_FLAGS_<CONFIG>`
+排在 target 编译选项**之前**，而 clang-cl 对 `/O*`、`/Ob*`、`/Oy` 这组开关
+是“后出现者生效”，所以 `FarCryEngine.cmake` 里的 `/O2` 会把它覆盖回去。
+
+想要“能调试 + 关优化”又不想用调试版 CRT，选 `RelWithDebInfo` 而不是 `Debug`
+（`Debug` 使用 `/MDd`，不能替换零售 `Bin32` 里的 DLL）。
+
+**Q: 链接 3 个渲染器时报 `lld-link: error: section larger than 4 GiB: .data`，
+   前面还有一大堆 `ignoring section .debug$S with unrecognized magic`？**
+A: 这是 **VS 2022 自带 LLVM 19.x 的 lld-link 的 bug**，与编译选项无关：它算错
+   `nvDXTlib.lib` / `ijl15.lib`（VC6 时代的预编译库，含旧格式 `.debug$S`、`.debug$F`
+   段）贡献的 `.data` 大小。`XRenderNULL` / `XRenderD3D9` / `XRenderOGL` 链接这两个库，
+   所以只有它们失败；`FarCry_WinSV.exe`、`rc.exe` 不链接它们，因此正常。
+   （实测：同一批 .obj 用 LLVM 23.1.2 的 `lld-link` 链接成功，19.1.5 必失败；
+   与 `/INCREMENTAL`、`/debug` 无关。）
+
+   解决办法（任选其一）：
+
+   1. **换工具链**：CLion → Settings → Build, Execution, Deployment → Toolchains，
+      新建 `System`/`Custom` 工具链，C/C++ 编译器都指向独立 LLVM 的
+      `clang-cl.exe`（如 `G:\MySDK\clang+llvm-23.1.2-x86_64-pc-windows-msvc\bin`），
+      即 `build-clang.bat` 用的那一套；
+   2. **只换链接器**：保留 VS 的 clang 19，在 CMake profile 的 CMake options 里加
+      `-DCMAKE_LINKER="<独立 LLVM 目录>/bin/lld-link.exe"`，然后删除 `build` 目录重新
+      configure（编译出来的 COFF 在 19/23 之间是兼容的，已实测）；
+   3. 直接用 `build-clang.bat`（Ninja + PATH 里的 clang-cl / lld-link），已验证可完整链接。
+
+   配置阶段如果检测到 `lld-link < 20`，CMake 会直接打印这条警告。
 

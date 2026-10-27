@@ -2,11 +2,18 @@
 REM =============================================================================
 REM  Far Cry 1 - build with clang-cl (Ninja generator)
 REM
-REM  Usage:  build-clang.bat [Release^|Debug]
+REM  Usage:  build-clang.bat [Release^|Debug] [optimize]
+REM
+REM  Compiler optimisations are disabled by default (FARCRY_NO_OPTIMIZATION=ON,
+REM  see CMakeLists.txt).  Pass "optimize" as the second argument to build the
+REM  regular /O2 binaries that can be shipped.
 REM =============================================================================
 setlocal
 set CONFIG=%1
 if "%CONFIG%"=="" set CONFIG=Debug
+
+set NOOPT=ON
+if /I "%2"=="optimize" set NOOPT=OFF
 
 set BUILD_DIR=build-clang
 
@@ -27,6 +34,7 @@ cmake -S . -B %BUILD_DIR% -G Ninja ^
       -DCMAKE_C_COMPILER=clang-cl ^
       -DCMAKE_CXX_COMPILER=clang-cl ^
       -DFARCRY_BUILD_RENDERER_OGL=ON ^
+      -DFARCRY_NO_OPTIMIZATION=%NOOPT% ^
       -DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
 if errorlevel 1 exit /b 1
 
